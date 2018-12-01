@@ -1,0 +1,9 @@
+allow-newer: true
+
+resolver: lts-12.19
+
+packages:
+- .
+
+extra-deps:
+- astar-0.3.0.0
