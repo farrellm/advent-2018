@@ -24,6 +24,15 @@ p2 :: IO ()
 p2 = do
   ls <- lines <$> input
   let ds = fmap readInt ls
-      ss = scanl (+) 0 (cycle ds)
+      ss = scanl' (+) 0 (cycle ds)
       s = foldM go S.empty ss
   print s
+
+p2' :: IO ()
+p2' = do
+  ls <- lines <$> input
+  let ds = fmap readInt ls
+      ss = scanl' (+) 0 (cycle ds)
+      ps = zip ss (scanl' (flip S.insert) S.empty ss)
+      r = fst <$> find (uncurry S.member) ps
+  print r
