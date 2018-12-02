@@ -16,6 +16,9 @@ module AdventPrelude
   , enum
   , findDup
   , cycleLen
+  , freq
+  , juxt
+  , juxt3
   , md5
   , sha1
   , nbr4
@@ -88,6 +91,18 @@ cycleLen xs =
          pure (i - j)
   where
     f m (k, v) = M.insert k v m
+
+freq :: Ord a => [a] -> Map a Int
+freq cs = foldl' (flip $ M.alter f) M.empty cs
+  where
+    f Nothing = Just 1
+    f (Just x) = Just (x + 1)
+
+juxt :: (a -> b) -> (a -> c) -> a -> (b, c)
+juxt f g x = (f x, g x)
+
+juxt3 :: (a -> b) -> (a -> c) -> (a -> d) -> a -> (b, c, d)
+juxt3 f g h x = (f x, g x, h x)
 
 stringHash ::
      (HashAlgorithm alg, StringConv s ByteString, StringConv ByteString s)
