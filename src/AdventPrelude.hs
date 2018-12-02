@@ -14,6 +14,8 @@ module AdventPrelude
   , putTxt
   , putTxtLn
   , enum
+  , findDup
+  , cycleLen
   , md5
   , sha1
   , nbr4
@@ -35,8 +37,11 @@ import Control.Monad.Primitive as X (PrimMonad, PrimState, RealWorld)
 import Data.Graph.AStar as X
 
 import Crypto.Hash
+import qualified Data.List as L
+import qualified Data.Map as M
+import qualified Data.Set as S
+import qualified Data.String as Str
 import qualified Data.Text as T
-import qualified Data.String as S
 
 import qualified Text.Megaparsec as Mp
 import Text.Megaparsec as X
@@ -68,6 +73,21 @@ putTxtLn = putStrLn
 
 enum :: (Enum a, Bounded a) => [a]
 enum = enumFromTo minBound maxBound
+
+findDup :: Ord b => [b] -> Maybe b
+findDup xs =
+  let ss = scanl' (flip S.insert) S.empty xs
+  in fst <$> find (uncurry S.member) (zip xs ss)
+
+cycleLen :: Ord a => [a] -> Maybe Int
+cycleLen xs =
+  let ms = scanl' f M.empty $ zip xs [0 ..]
+      zs = zip [0 ..] $ zip xs ms
+   in do (i, (v, m)) <- find (uncurry M.member . snd) zs
+         j <- M.lookup v m
+         pure (i - j)
+  where
+    f m (k, v) = M.insert k v m
 
 stringHash ::
      (HashAlgorithm alg, StringConv s ByteString, StringConv ByteString s)
@@ -136,14 +156,20 @@ double = L.signed sc L.float
 class Chars a where
   words :: a -> [a]
   lines :: a -> [a]
+  unwords :: [a] -> a
+  unlines :: [a] -> a
 
 instance Chars String where
-  words = S.words
-  lines = S.lines
+  words = Str.words
+  lines = Str.lines
+  unwords = Str.unwords
+  unlines = Str.unlines
 
 instance Chars Text where
   words = T.words
   lines = T.lines
+  unwords = T.unwords
+  unlines = T.unlines
 
 sortChar :: (StringConv s String, StringConv String s) => s -> s
 sortChar w = toS $ sort (toS w :: String)
