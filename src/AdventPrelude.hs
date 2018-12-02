@@ -93,10 +93,7 @@ cycleLen xs =
     f m (k, v) = M.insert k v m
 
 freq :: Ord a => [a] -> Map a Int
-freq cs = foldl' (flip $ M.alter f) M.empty cs
-  where
-    f Nothing = Just 1
-    f (Just x) = Just (x + 1)
+freq cs = foldl' (\m k -> M.insertWith (+) k 1 m) M.empty cs
 
 juxt :: (a -> b) -> (a -> c) -> a -> (b, c)
 juxt f g x = (f x, g x)
