@@ -1,10 +1,10 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings, FlexibleContexts #-}
 {-# LANGUAGE TupleSections, GADTs #-}
 
-module Day1 () where
+module DayX () where
 
 import AdventPrelude hiding ()
--- import qualified Data.Grid.Mutable as MG
+import qualified Data.Grid.Mutable as MG
 import qualified Data.List as L
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -13,7 +13,7 @@ import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
 
 input :: IO Text
-input = readFile "input-X.txt"
+input = readFile "data/input-X.txt"
 
 -- p1 :: IO ()
 -- p1 = do
