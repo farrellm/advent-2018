@@ -25,6 +25,8 @@ module AdventPrelude
   , nbr8
   , words
   , lines
+  , unwords
+  , unlines
   , readInt
 
   -- parser
