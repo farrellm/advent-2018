@@ -1,51 +1,68 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Data.Grid.Mutable
-  ( MGrid(..)
-  , new
+  ( MGrid
+  -- , new
+  -- , new'
+  , replicate
+  , replicate'
   , read
   , write
+  , modify
   , printGrid
   ) where
 
-import Prelude hiding (read)
-import qualified Data.Vector.Unboxed.Mutable as MV
-import Control.Monad.Primitive
+import Prelude hiding (read, replicate)
+import qualified Data.Array.IO as A
 import Control.Monad
+import Control.Monad.IO.Class
 
-data MGrid s a = MGrid Int Int (MV.MVector s a)
+type MGrid e = A.IOUArray (Int, Int) e
 
-index :: Int -> Int -> (Int, Int) -> Int
-index w h (x, y) = (w + w + 1) * (y + h) + (x + w)
+-- new :: (A.MArray A.IOUArray e m, MonadIO m) => Int -> Int -> m (MGrid e)
+-- new w h = A.newArray_ ((0, 0), (w - 1, h - 1))
 
-new :: (PrimMonad m, MV.Unbox a) => Int -> Int -> m (MGrid (PrimState m) a)
-new w h = MGrid w h <$> MV.new ((w + w + 1) * (h + h + 1))
+-- new' :: (A.MArray A.IOUArray e m, MonadIO m) => (Int, Int) -> (Int, Int) -> m (MGrid e)
+-- new' (w1, w2) (h1, h2) = A.newArray_ ((w1, h1), (w2 - 1, h2 - 1))
 
 replicate ::
-     (PrimMonad m, MV.Unbox a) => Int -> Int -> a -> m (MGrid (PrimState m) a)
-replicate w h x = MGrid w h <$> MV.replicate ((w + w + 1) * (h + h + 1)) x
+     (A.MArray A.IOUArray e m, A.MArray A.IOUArray e IO)
+  => Int
+  -> Int
+  -> e
+  -> m (MGrid e)
+replicate w h v = A.newArray ((0, 0), (w - 1, h - 1)) v
 
-read :: (PrimMonad m, MV.Unbox a) => MGrid (PrimState m) a -> (Int, Int) -> m a
-read (MGrid w h v) c = MV.read v (index w h c)
+replicate' ::
+     (A.MArray A.IOUArray e m, A.MArray A.IOUArray e IO)
+  => Int
+  -> Int
+  -> e
+  -> m (MGrid e)
+replicate' w h v = A.newArray ((0, 0), (w - 1, h - 1)) v
 
-write ::
-     (PrimMonad m, MV.Unbox a)
-  => MGrid (PrimState m) a
-  -> (Int, Int)
-  -> a
-  -> m ()
-write (MGrid w h v) c x = MV.write v (index w h c) x
+read :: (A.MArray A.IOUArray e m, MonadIO m) => MGrid e -> (Int, Int) -> m e
+read g c = A.readArray g c
+
+write :: (A.MArray A.IOUArray e m, MonadIO m) => MGrid e -> (Int, Int) -> e -> m ()
+write g c x = A.writeArray g c x
 
 modify ::
-     (PrimMonad m, MV.Unbox a)
-  => MGrid (PrimState m) a
-  -> (a -> a)
+     (A.MArray A.IOUArray e m, MonadIO m)
+  => MGrid e
+  -> (e -> e)
   -> (Int, Int)
   -> m ()
-modify (MGrid w h v) f c = MV.modify v f (index w h c)
+modify g f c = do
+  v <- read g c
+  write g c (f v)
 
-printGrid :: (Show a, MV.Unbox a) => MGrid RealWorld a -> IO ()
-printGrid g@(MGrid w h _) =
-  forM_ (reverse [-h .. h]) $ \y -> do
-    forM_ [-w .. w] $ \x -> do
+printGrid :: (A.MArray A.IOUArray e IO, Show e, MonadIO m) => MGrid e -> m ()
+printGrid g = liftIO $ do
+  ((x1, y1), (x2, y2)) <- A.getBounds g
+  forM_ (reverse [y1 .. y2]) $ \y -> do
+    forM_ [x1 .. x2] $ \x -> do
       v <- read g (x, y)
       putStr (show v :: String)
+      putStr " "
     putStrLn ("" :: String)
