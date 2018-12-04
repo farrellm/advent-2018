@@ -1,16 +1,13 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 
-module Day3 () where
+module Day3 (p1, p2) where
 
 import AdventPrelude hiding ()
 import qualified Data.Array.IO as A
-import qualified Data.Array.MArray as A
-import qualified Data.Array.Unboxed as A
 import qualified Data.Set as S
-import qualified Data.Text as T
 
-input' :: Text
-input' = unlines ["#1 @ 1,3: 4x4", "#2 @ 3,1: 4x4", "#3 @ 5,5: 2x2"]
+-- input' :: Text
+-- input' = unlines ["#1 @ 1,3: 4x4", "#2 @ 3,1: 4x4", "#3 @ 5,5: 2x2"]
 
 input :: IO Text
 input = readFile "data/input-3.txt"
@@ -79,6 +76,5 @@ p2 = do
               b <- liftIO $ fillRectWith g n
               modify (<> b)
       bs <- execStateT go S.empty
-      n <- countGtOne g
       print (S.fromList vs `S.difference` bs)
     Left e -> putStr (parseErrorPretty e)

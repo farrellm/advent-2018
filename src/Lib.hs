@@ -9,4 +9,4 @@ import AdventPrelude
 import Day1
 
 someFunc :: IO ()
-someFunc = pure ()
+someFunc = p1

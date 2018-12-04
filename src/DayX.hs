@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings, FlexibleContexts #-}
-{-# LANGUAGE TupleSections, GADTs #-}
+{-# LANGUAGE TupleSections, GADTs, RecordWildCards #-}
 
 module DayX () where
 
@@ -14,6 +14,7 @@ import qualified Data.Vector.Unboxed.Mutable as MV
 
 input :: IO Text
 input = readFile "data/input-X.txt"
+-- input = readFile "data/test-X.txt"
 
 -- p1 :: IO ()
 -- p1 = do

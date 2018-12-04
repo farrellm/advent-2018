@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 
-module Day2 () where
+module Day2 (p1, p2) where
 
 import AdventPrelude
 import qualified Data.Map as M
@@ -14,7 +14,7 @@ input = readFile "data/input-2.txt"
 p1 :: IO ()
 p1 = do
   ls <- lines <$> input
-  let cs = fmap (freq . toS) ls :: [Map Char Int]
+  let cs = fmap (freq . unpack) ls
       x = length $ filter (any (== 2) . M.elems) cs
       y = length $ filter (any (== 3) . M.elems) cs
   print (x * y)
@@ -25,7 +25,7 @@ p2 = do
   let (z : _) = do
         a <- ls
         b <- ls
-        let ps = zip (toS a :: [Char]) (toS b)
+        let ps = zip (unpack a) (unpack b)
             ds = filter (uncurry (/=)) ps
         if length ds == 1
           then pure ps

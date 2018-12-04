@@ -1,20 +1,24 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings, FlexibleContexts #-}
-{-# LANGUAGE TupleSections, GADTs, RecordWildCards #-}
+{-# LANGUAGE NoImplicitPrelude, OverloadedStrings, RecordWildCards  #-}
 
-module Day4 () where
+module Day4 (p1, p2) where
 
-import AdventPrelude hiding ()
-import qualified Data.Grid.Mutable as MG
-import qualified Data.List as L
+import AdventPrelude
 import qualified Data.Map as M
-import qualified Data.Set as S
-import qualified Data.Text as T
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
 
 input :: IO Text
 input = readFile "data/input-4.txt"
 -- input = readFile "data/test-4.txt"
+
+-- findMaxAssoc :: (Ord a) => Map k a -> Maybe (k, a)
+-- findMaxAssoc = (Just . swap) <=< M.lookupMax . M.fromList . fmap swap . M.assocs
+
+-- findMaxKey :: (Ord a) => Map k a -> Maybe k
+-- findMaxKey = (Just . fst) <=< findMaxAssoc
+
+-- findMaxValue :: (Ord a) => Map k a -> Maybe a
+-- findMaxValue = (Just . snd) <=< findMaxAssoc
 
 data Action = Begin Int | Sleep | Wake
   deriving (Show, Eq, Ord)
@@ -51,26 +55,15 @@ data GuardState = GuardState
   }
 
 go :: GuardState -> Entry -> IO GuardState
-go st e@(Entry d t (Begin k)) = pure st {_cur = k}
-go st e@(Entry d (Time t) Sleep) = pure st {_begin = t}
-go st@GuardState {..} e@(Entry d (Time t) Wake) = do
+go st (Entry _d _t (Begin k)) = pure st {_cur = k}
+go st (Entry _d (Time t) Sleep) = pure st {_begin = t}
+go st@GuardState {..} (Entry _d (Time t) Wake) = do
   sleep <-
     case M.lookup _cur _sleep of
-      Nothing -> MV.new 60
+      Nothing -> MV.replicate 60 0
       Just v -> pure v
   forM_ [_begin .. t - 1] $ MV.modify sleep (+ 1)
   pure st {_sleep = M.insert _cur sleep _sleep}
-
-countMin :: GuardState -> IO (Map Int Int)
-countMin st = do
-  ps <- traverse go $ M.assocs (_sleep st)
-  let m = M.fromList ps
-  pure m
-  where
-    go :: (Int, MV.MVector RealWorld Int) -> IO (Int, Int)
-    go (k, v) = do
-      v' <- V.freeze v
-      pure (k, V.sum v')
 
 p1 :: IO ()
 p1 = do
@@ -79,31 +72,24 @@ p1 = do
     Right ns -> do
       let ns' = sort ns
       st <- foldM go (GuardState 0 0 M.empty) ns'
-      ss <- countMin st
-      -- print ss
-      let Just (m, k) = M.lookupMax . M.fromList . fmap swap $ M.assocs ss
-          Just sl = k `M.lookup` _sleep st
-      sl' <- V.freeze sl
-      let mx = V.maximum sl'
-          Just i = V.findIndex (== mx) sl'
+      vs <- traverse V.freeze $ _sleep st
+      let ss = fmap V.sum vs
+          Just k = findMaxKey ss
+          Just v = k `M.lookup` vs
+          i = V.maxIndex v
       print (k, i, k * i)
     Left e -> putStr (parseErrorPretty e)
 
 p2 :: IO ()
 p2 = do
-  xs <- parse (entry `sepEndBy` eol)"" <$> input
+  xs <- parse (entry `sepEndBy` eol) "" <$> input
   case xs of
     Right ns -> do
       let ns' = sort ns
       st <- foldM go (GuardState 0 0 M.empty) ns'
-      ss <- countMin st
-      -- print ss
-      let sls = M.assocs (_sleep st)
-      sls' <- traverse (\(a, b) -> (a,) <$> V.freeze b) sls
-      let mxs = fmap (second V.maximum) sls'
-          mx = maximum (fmap snd mxs)
-          Just i = L.findIndex ((== mx) . snd) mxs
-          (k, _) = mxs L.!! i
-          Just j = V.findIndex (== mx) $ snd (sls' L.!! i)
+      vs <- traverse V.freeze $ _sleep st
+      let ms = fmap V.maximum vs
+          Just (k, m) = findMaxAssoc ms
+          Just j = V.findIndex (== m) =<< k `M.lookup` vs
       print (k, j, k * j)
     Left e -> putStr (parseErrorPretty e)

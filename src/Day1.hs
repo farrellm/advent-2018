@@ -1,12 +1,12 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 
-module Day1 () where
+module Day1 (p1, p2, p2') where
 
 import AdventPrelude
 import qualified Data.Set as S
 
 input :: IO Text
-input = readFile "input-1.txt"
+input = readFile "data/input-1.txt"
 
 p1 :: IO ()
 p1 = do
