@@ -17,17 +17,24 @@ module AdventPrelude
   , findDup
   , cycleLen
   , freq
+  , findMaxAssoc
+  , findMaxKey
+  , findMaxValue
   , juxt
   , juxt3
   , md5
   , sha1
   , nbr4
   , nbr8
+  , mv4
+  , mv8
   , words
   , lines
   , unwords
   , unlines
+  , unpack
   , readInt
+  , sortChar
 
   -- parser
   , Parser
@@ -35,14 +42,14 @@ module AdventPrelude
   -- , double
   ) where
 
-import Protolude hiding (head, tail, try)
+import Protolude hiding (head, try)
 import Prelude (String, error, head, tail, last)
 
 import Control.Monad.Primitive as X (PrimMonad, PrimState, RealWorld)
 import Data.Graph.AStar as X
 
 import Crypto.Hash
-import qualified Data.List as L
+-- import qualified Data.List as L
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.String as Str
@@ -94,8 +101,17 @@ cycleLen xs =
   where
     f m (k, v) = M.insert k v m
 
-freq :: Ord a => [a] -> Map a Int
+freq :: (Traversable t, Ord a) => t a -> Map a Int
 freq cs = foldl' (\m k -> M.insertWith (+) k 1 m) M.empty cs
+
+findMaxAssoc :: (Ord a) => Map k a -> Maybe (k, a)
+findMaxAssoc = (Just . swap) <=< M.lookupMax . M.fromList . fmap swap . M.assocs
+
+findMaxKey :: (Ord a) => Map k a -> Maybe k
+findMaxKey = (Just . fst) <=< findMaxAssoc
+
+findMaxValue :: (Ord a) => Map k a -> Maybe a
+findMaxValue = (Just . snd) <=< findMaxAssoc
 
 juxt :: (a -> b) -> (a -> c) -> a -> (b, c)
 juxt f g x = (f x, g x)
@@ -104,19 +120,16 @@ juxt3 :: (a -> b) -> (a -> c) -> (a -> d) -> a -> (b, c, d)
 juxt3 f g h x = (f x, g x, h x)
 
 stringHash ::
-     (HashAlgorithm alg, StringConv s ByteString, StringConv ByteString s)
+     (HashAlgorithm alg, StringConv s ByteString, StringConv String s)
   => alg
   -> s
   -> s
-stringHash hasher msg =
-  let msg' = toS msg :: ByteString
-      hash = show (hashWith hasher msg') :: ByteString
-   in toS hash
+stringHash hasher msg = show $ hashWith hasher (toS msg :: ByteString)
 
-md5 :: (StringConv s ByteString, StringConv ByteString s) => s -> s
+md5 :: (StringConv s ByteString, StringConv String s) => s -> s
 md5 = stringHash MD5
 
-sha1 :: (StringConv s ByteString, StringConv ByteString s) => s -> s
+sha1 :: (StringConv s ByteString, StringConv String s) => s -> s
 sha1 = stringHash SHA1
 
 data Dir4 = L | R | U | D
@@ -164,26 +177,29 @@ sc = L.space space1 empty empty
 int :: Parser Int
 int = L.signed sc L.decimal
 
-double :: Parser Double
-double = L.signed sc L.float
+-- double :: Parser Double
+-- double = L.signed sc L.float
 
 class Chars a where
   words :: a -> [a]
   lines :: a -> [a]
   unwords :: [a] -> a
   unlines :: [a] -> a
+  unpack :: a -> [Char]
 
 instance Chars String where
   words = Str.words
   lines = Str.lines
   unwords = Str.unwords
   unlines = Str.unlines
+  unpack = identity
 
 instance Chars Text where
   words = T.words
   lines = T.lines
   unwords = T.unwords
   unlines = T.unlines
+  unpack = T.unpack
 
 sortChar :: (StringConv s String, StringConv String s) => s -> s
 sortChar w = toS $ sort (toS w :: String)
