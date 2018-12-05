@@ -7,3 +7,4 @@ packages:
 
 extra-deps:
 - astar-0.3.0.0
+- fmt-0.6.1.1

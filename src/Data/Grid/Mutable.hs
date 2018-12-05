@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoImplicitPrelude, FlexibleContexts #-}
 
 module Data.Grid.Mutable
   ( MGrid
@@ -9,13 +9,17 @@ module Data.Grid.Mutable
   , read
   , write
   , modify
+  , map
   , printGrid
   ) where
 
-import Prelude hiding (read, replicate)
+import Protolude hiding (map, modify, replicate)
+
 import qualified Data.Array.IO as A
-import Control.Monad
-import Control.Monad.IO.Class
+import qualified Data.Array.Unboxed as A
+import Fmt
+
+import qualified Data.Grid as G
 
 type MGrid e = A.IOUArray (Int, Int) e
 
@@ -25,20 +29,10 @@ type MGrid e = A.IOUArray (Int, Int) e
 -- new' :: (A.MArray A.IOUArray e m, MonadIO m) => (Int, Int) -> (Int, Int) -> m (MGrid e)
 -- new' (w1, w2) (h1, h2) = A.newArray_ ((w1, h1), (w2 - 1, h2 - 1))
 
-replicate ::
-     (A.MArray A.IOUArray e m, A.MArray A.IOUArray e IO)
-  => Int
-  -> Int
-  -> e
-  -> m (MGrid e)
+replicate :: (A.MArray A.IOUArray e m) => Int -> Int -> e -> m (MGrid e)
 replicate w h v = A.newArray ((0, 0), (w - 1, h - 1)) v
 
-replicate' ::
-     (A.MArray A.IOUArray e m, A.MArray A.IOUArray e IO)
-  => Int
-  -> Int
-  -> e
-  -> m (MGrid e)
+replicate' :: (A.MArray A.IOUArray e m) => Int -> Int -> e -> m (MGrid e)
 replicate' w h v = A.newArray ((0, 0), (w - 1, h - 1)) v
 
 read :: (A.MArray A.IOUArray e m, MonadIO m) => MGrid e -> (Int, Int) -> m e
@@ -57,12 +51,20 @@ modify g f c = do
   v <- read g c
   write g c (f v)
 
-printGrid :: (A.MArray A.IOUArray e IO, Show e, MonadIO m) => MGrid e -> m ()
-printGrid g = liftIO $ do
-  ((x1, y1), (x2, y2)) <- A.getBounds g
-  forM_ (reverse [y1 .. y2]) $ \y -> do
-    forM_ [x1 .. x2] $ \x -> do
-      v <- read g (x, y)
-      putStr (show v :: String)
-      putStr " "
-    putStrLn ("" :: String)
+map ::
+     (A.MArray A.IOUArray e m, A.MArray A.IOUArray e' m)
+  => (e -> e')
+  -> MGrid e
+  -> m (MGrid e')
+map = A.mapArray
+
+printGrid ::
+     ( A.MArray A.IOUArray e m
+     , A.IArray A.UArray e
+     , Show e
+     , Buildable e
+     , MonadIO m
+     )
+  => MGrid e
+  -> m ()
+printGrid g = G.freeze g >>= G.printGrid
