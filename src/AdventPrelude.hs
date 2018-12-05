@@ -20,6 +20,9 @@ module AdventPrelude
   , findMaxAssoc
   , findMaxKey
   , findMaxValue
+  , findMinAssoc
+  , findMinKey
+  , findMinValue
   , juxt
   , juxt3
   , md5
@@ -112,6 +115,15 @@ findMaxKey = (Just . fst) <=< findMaxAssoc
 
 findMaxValue :: (Ord a) => Map k a -> Maybe a
 findMaxValue = (Just . snd) <=< findMaxAssoc
+
+findMinAssoc :: (Ord a) => Map k a -> Maybe (k, a)
+findMinAssoc = (Just . swap) <=< M.lookupMin . M.fromList . fmap swap . M.assocs
+
+findMinKey :: (Ord a) => Map k a -> Maybe k
+findMinKey = (Just . fst) <=< findMinAssoc
+
+findMinValue :: (Ord a) => Map k a -> Maybe a
+findMinValue = (Just . snd) <=< findMinAssoc
 
 juxt :: (a -> b) -> (a -> c) -> a -> (b, c)
 juxt f g x = (f x, g x)

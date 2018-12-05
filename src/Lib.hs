@@ -6,7 +6,7 @@ module Lib
 
 import AdventPrelude
 
-import Day1
+import Day5
 
 someFunc :: IO ()
-someFunc = p1
+someFunc = p2
