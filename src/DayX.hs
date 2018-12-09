@@ -1,5 +1,5 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings, FlexibleContexts #-}
-{-# LANGUAGE TupleSections, GADTs, RecordWildCards #-}
+{-# LANGUAGE TupleSections, GADTs, RecordWildCards, TemplateHaskell #-}
 
 module DayX () where
 
@@ -11,6 +11,7 @@ import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as MV
+import Lens.Micro.Platform
 
 input :: IO Text
 input = readFile "data/input-X.txt"
