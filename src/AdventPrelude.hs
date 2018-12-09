@@ -41,6 +41,7 @@ module AdventPrelude
   , readInt
   , sortChar
   , tsort
+  , (!?)
 
   -- parser
   , Parser
@@ -57,6 +58,7 @@ import Data.Ix as X (Ix, range, inRange, rangeSize)
 
 import Crypto.Hash
 -- import qualified Data.List as L
+import Data.List as X ((!!))
 import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.String as Str
@@ -251,3 +253,11 @@ readInt s =
   case parse int "" (toS s) of
     Left e -> error (errorBundlePretty e)
     Right i -> i
+
+infixl 9  !?
+
+{-# INLINABLE (!?) #-}
+(!?) :: [a] -> Int -> Maybe a
+(x : _) !? 0 = Just x
+[] !? _ = Nothing
+(_ : xs) !? i = xs !? (i - 1)
