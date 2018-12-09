@@ -28,6 +28,7 @@ dependencies:
 - cryptonite
 - fmt
 - megaparsec
+- microlens-platform
 - mtl
 - parser-combinators
 - primitive
