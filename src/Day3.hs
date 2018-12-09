@@ -51,7 +51,7 @@ p1 = do
       forM_ ns $ fillRect g
       n <- countGtOne g
       print n
-    Left e -> putStr (parseErrorPretty e)
+    Left e -> putStr (errorBundlePretty e)
 
 fillRectWith :: Cloth -> Rect -> IO (Set Int)
 fillRectWith g (Rect v x y w h) = execStateT go S.empty
@@ -77,4 +77,4 @@ p2 = do
               modify (<> b)
       bs <- execStateT go S.empty
       print (S.fromList vs `S.difference` bs)
-    Left e -> putStr (parseErrorPretty e)
+    Left e -> putStr (errorBundlePretty e)

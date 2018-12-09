@@ -78,7 +78,7 @@ p1 = do
           Just v = k `M.lookup` vs
           i = V.maxIndex v
       print (k, i, k * i)
-    Left e -> putStr (parseErrorPretty e)
+    Left e -> putStr (errorBundlePretty e)
 
 p2 :: IO ()
 p2 = do
@@ -92,4 +92,4 @@ p2 = do
           Just (k, m) = findMaxAssoc ms
           Just j = V.findIndex (== m) =<< k `M.lookup` vs
       print (k, j, k * j)
-    Left e -> putStr (parseErrorPretty e)
+    Left e -> putStr (errorBundlePretty e)

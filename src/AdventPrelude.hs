@@ -31,6 +31,8 @@ module AdventPrelude
   , nbr8
   , mv4
   , mv8
+  , dist1
+  , bounds
   , words
   , lines
   , unwords
@@ -38,6 +40,7 @@ module AdventPrelude
   , unpack
   , readInt
   , sortChar
+  , tsort
 
   -- parser
   , Parser
@@ -50,6 +53,7 @@ import Prelude (String, error, head, tail, last)
 
 import Control.Monad.Primitive as X (PrimMonad, PrimState, RealWorld)
 import Data.Graph.AStar as X
+import Data.Ix as X (Ix, range, inRange, rangeSize)
 
 import Crypto.Hash
 -- import qualified Data.List as L
@@ -64,7 +68,7 @@ import Text.Megaparsec as X
   , lookAhead
   , notFollowedBy
   , parse
-  , parseErrorPretty
+  , errorBundlePretty
   , try
   )
 import Text.Megaparsec.Char as X
@@ -181,6 +185,17 @@ mv8 (x, y) RD = (succ x, pred y)
 mv8 (x, y) UU = (x, succ y)
 mv8 (x, y) DD = (x, pred y)
 
+dist1 :: Num n => (n, n) -> (n, n) -> n
+dist1 (a, b) (c, d) = abs (a - c) + abs (b - d)
+
+bounds :: (Ord n) => [(n, n)] -> ((n, n), (n, n))
+bounds cs =
+  let x1 = minimum $ fmap fst cs
+      x2 = maximum $ fmap fst cs
+      y1 = minimum $ fmap snd cs
+      y2 = maximum $ fmap snd cs
+   in ((x1, x2), (y1, y2))
+
 type Parser = Mp.Parsec Void Text
 
 sc :: Parser ()
@@ -216,8 +231,23 @@ instance Chars Text where
 sortChar :: (StringConv s String, StringConv String s) => s -> s
 sortChar w = toS $ sort (toS w :: String)
 
+tsort :: (Ord a) => [(a, a)] -> [a]
+tsort ps =
+  let fs = S.fromList $ fmap fst ps
+      ss = S.fromList $ fmap snd ps
+   in next ps (fs <> ss)
+  where
+    next ns vs =
+      let ss = S.fromList $ fmap snd ns
+          rs = S.toAscList $ S.difference vs ss
+       in case rs of
+            (r:_) ->
+              let ns' = filter ((/= r) . fst) ns
+               in r : next ns' (S.delete r vs)
+            [] -> []
+
 readInt :: (StringConv s Text) => s -> Int
 readInt s =
   case parse int "" (toS s) of
-    Left e -> error (parseErrorPretty e)
+    Left e -> error (errorBundlePretty e)
     Right i -> i

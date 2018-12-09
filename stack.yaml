@@ -1,6 +1,7 @@
 allow-newer: true
 
-resolver: lts-12.19
+# resolver: lts-12.19
+resolver: nightly-2018-12-07
 
 packages:
 - .
