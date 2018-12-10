@@ -32,8 +32,8 @@ type MGrid e = A.IOUArray (Int, Int) e
 replicate :: (A.MArray A.IOUArray e m) => Int -> Int -> e -> m (MGrid e)
 replicate w h v = A.newArray ((0, 0), (w - 1, h - 1)) v
 
-replicate' :: (A.MArray A.IOUArray e m) => Int -> Int -> e -> m (MGrid e)
-replicate' w h v = A.newArray ((0, 0), (w - 1, h - 1)) v
+replicate' :: (A.MArray A.IOUArray e m) => (Int, Int) -> (Int, Int) -> e -> m (MGrid e)
+replicate' (w1, w2) (h1, h2) v = A.newArray ((w1, h1), (w2 - 1, h2 - 1)) v
 
 read :: (A.MArray A.IOUArray e m, MonadIO m) => MGrid e -> (Int, Int) -> m e
 read g c = A.readArray g c
