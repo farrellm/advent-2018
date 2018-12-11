@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings, FlexibleContexts #-}
 {-# LANGUAGE TupleSections, GADTs, RecordWildCards, TemplateHaskell #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module DayX () where
 
@@ -7,6 +8,7 @@ import AdventPrelude hiding ()
 import qualified Data.Grid.Mutable as MG
 import qualified Data.List as L
 import qualified Data.Map as M
+import qualified Data.Sequence as Q
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Vector.Unboxed as V

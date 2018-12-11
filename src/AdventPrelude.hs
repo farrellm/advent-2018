@@ -23,6 +23,8 @@ module AdventPrelude
   , findMinAssoc
   , findMinKey
   , findMinValue
+  , maximumWith
+  , minimumWith
   , juxt
   , juxt3
   , md5
@@ -60,6 +62,7 @@ import Crypto.Hash
 -- import qualified Data.List as L
 import Data.List as X ((!!))
 import qualified Data.Map as M
+import Data.Sequence as X (Seq(..), (<|), (|>))
 import qualified Data.Set as S
 import qualified Data.String as Str
 import qualified Data.Text as T
@@ -130,6 +133,12 @@ findMinKey = (Just . fst) <=< findMinAssoc
 
 findMinValue :: (Ord a) => Map k a -> Maybe a
 findMinValue = (Just . snd) <=< findMinAssoc
+
+maximumWith :: (Ord b, Foldable t) => (a -> b) -> t a -> a
+maximumWith f = maximumBy (\x y -> compare (f x) (f y))
+
+minimumWith :: (Ord b, Foldable t) => (a -> b) -> t a -> a
+minimumWith f = minimumBy (\x y -> compare (f x) (f y))
 
 juxt :: (a -> b) -> (a -> c) -> a -> (b, c)
 juxt f g x = (f x, g x)
