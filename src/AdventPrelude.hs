@@ -15,6 +15,7 @@ module AdventPrelude
   , putTxtLn
   , enum
   , findDup
+  , findDups
   , cycleLen
   , freq
   , findMaxAssoc
@@ -23,6 +24,7 @@ module AdventPrelude
   , findMinAssoc
   , findMinKey
   , findMinValue
+  , findDelete
   , maximumWith
   , minimumWith
   , juxt
@@ -103,6 +105,11 @@ findDup xs =
   let ss = scanl' (flip S.insert) S.empty xs
   in fst <$> find (uncurry S.member) (zip xs ss)
 
+findDups :: Ord b => [b] -> [b]
+findDups xs =
+  let ss = scanl' (flip S.insert) S.empty xs
+  in fst <$> filter (uncurry S.member) (zip xs ss)
+
 cycleLen :: Ord a => [a] -> Maybe Int
 cycleLen xs =
   let ms = scanl' f M.empty $ zip xs [0 ..]
@@ -133,6 +140,12 @@ findMinKey = (Just . fst) <=< findMinAssoc
 
 findMinValue :: (Ord a) => Map k a -> Maybe a
 findMinValue = (Just . snd) <=< findMinAssoc
+
+findDelete :: (a -> Bool) -> [a] -> Maybe [a]
+findDelete _ [] = Nothing
+findDelete p (x : xs)
+  | p x = Just xs
+  | otherwise = (x :) <$> findDelete p xs
 
 maximumWith :: (Ord b, Foldable t) => (a -> b) -> t a -> a
 maximumWith f = maximumBy (\x y -> compare (f x) (f y))
