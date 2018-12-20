@@ -29,6 +29,7 @@ module AdventPrelude
   , minimumWith
   , juxt
   , juxt3
+  , digits
   , md5
   , sha1
   , nbr4
@@ -158,6 +159,9 @@ juxt f g x = (f x, g x)
 
 juxt3 :: (a -> b) -> (a -> c) -> (a -> d) -> a -> (b, c, d)
 juxt3 f g h x = (f x, g x, h x)
+
+digits :: Int -> [Int]
+digits i = fmap (subtract (ord '0') . ord) $ show i
 
 stringHash ::
      (HashAlgorithm alg, StringConv s ByteString, StringConv String s)
