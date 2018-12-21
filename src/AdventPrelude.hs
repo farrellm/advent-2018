@@ -1,5 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE ViewPatterns, TypeFamilies  #-}
 
 module AdventPrelude
   ( module Protolude
@@ -47,6 +48,9 @@ module AdventPrelude
   , sortChar
   , tsort
   , (!?)
+  , Tweakable
+  , tweak
+  , tweakM
 
   -- parser
   , Parser
@@ -287,3 +291,57 @@ infixl 9  !?
 (x : _) !? 0 = Just x
 [] !? _ = Nothing
 (_ : xs) !? i = xs !? (i - 1)
+
+class Tweakable t where
+  type EntryIn t b
+  type EntryOut t b
+  tweak :: (t b -> EntryIn t b -> t b -> (t b, EntryOut t b, t b)) -> t b -> t b
+  tweakM ::
+       (Monad m)
+    => (t b -> EntryIn t b -> t b -> m (t b, EntryOut t b, t b))
+    -> t b
+    -> m (t b)
+
+instance (Ord a) => Tweakable (Map a) where
+  type EntryIn (Map a) b = (a, b)
+  type EntryOut (Map a) b = (a, b)
+  tweak f (M.minViewWithKey -> Nothing) = M.empty
+  tweak f (M.minViewWithKey -> Just (e, m)) = go M.empty e m
+    where
+      go done x todo =
+        let (done', x', todo') = f done x todo
+            done'' = uncurry M.insert x' done'
+         in case M.minViewWithKey todo' of
+              Nothing -> done''
+              Just (x'', todo'') -> go done'' x'' todo''
+  tweakM f (M.minViewWithKey -> Nothing) = pure M.empty
+  tweakM f (M.minViewWithKey -> Just (e, m)) = go M.empty e m
+    where
+      go done x todo = do
+        (done', x', todo') <- f done x todo
+        let done'' = uncurry M.insert x' done'
+        case M.minViewWithKey todo' of
+          Nothing -> pure done''
+          Just (x'', todo'') -> go done'' x'' todo''
+
+instance Tweakable Seq where
+  type EntryIn Seq b = (Int, b)
+  type EntryOut Seq b = b
+  tweak f Empty = Empty
+  tweak f (e :<| m) = go 0 Empty e m
+    where
+      go i done x todo =
+        let (done', x', todo') = f done (i, x) todo
+            done'' = done' :|> x'
+         in case todo' of
+              Empty -> done''
+              (x'' :<| todo'') -> go (i + 1) done'' x'' todo''
+  tweakM f Empty = pure Empty
+  tweakM f (e :<| m) = go 0 Empty e m
+    where
+      go i done x todo = do
+        (done', x', todo') <- f done (i, x) todo
+        let done'' = done' :|> x'
+        case todo' of
+          Empty -> pure done''
+          (x'' :<| todo'') -> go (i + 1) done'' x'' todo''
