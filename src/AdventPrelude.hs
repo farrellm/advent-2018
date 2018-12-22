@@ -51,6 +51,8 @@ module AdventPrelude
   , Tweakable
   , tweak
   , tweakM
+  , lookupCycle
+  , lookupLinear
 
   -- parser
   , Parser
@@ -305,8 +307,10 @@ class Tweakable t where
 instance (Ord a) => Tweakable (Map a) where
   type EntryIn (Map a) b = (a, b)
   type EntryOut (Map a) b = (a, b)
-  tweak f (M.minViewWithKey -> Nothing) = M.empty
-  tweak f (M.minViewWithKey -> Just (e, m)) = go M.empty e m
+  tweak f m =
+    case M.minViewWithKey m of
+      Nothing -> M.empty
+      Just (e, m') -> go M.empty e m'
     where
       go done x todo =
         let (done', x', todo') = f done x todo
@@ -314,8 +318,10 @@ instance (Ord a) => Tweakable (Map a) where
          in case M.minViewWithKey todo' of
               Nothing -> done''
               Just (x'', todo'') -> go done'' x'' todo''
-  tweakM f (M.minViewWithKey -> Nothing) = pure M.empty
-  tweakM f (M.minViewWithKey -> Just (e, m)) = go M.empty e m
+  tweakM f m =
+    case M.minViewWithKey m of
+      Nothing -> pure M.empty
+      Just (e, m') -> go M.empty e m'
     where
       go done x todo = do
         (done', x', todo') <- f done x todo
@@ -327,7 +333,7 @@ instance (Ord a) => Tweakable (Map a) where
 instance Tweakable Seq where
   type EntryIn Seq b = (Int, b)
   type EntryOut Seq b = b
-  tweak f Empty = Empty
+  tweak _ Empty = Empty
   tweak f (e :<| m) = go 0 Empty e m
     where
       go i done x todo =
@@ -336,7 +342,7 @@ instance Tweakable Seq where
          in case todo' of
               Empty -> done''
               (x'' :<| todo'') -> go (i + 1) done'' x'' todo''
-  tweakM f Empty = pure Empty
+  tweakM _ Empty = pure Empty
   tweakM f (e :<| m) = go 0 Empty e m
     where
       go i done x todo = do
@@ -345,3 +351,30 @@ instance Tweakable Seq where
         case todo' of
           Empty -> pure done''
           (x'' :<| todo'') -> go (i + 1) done'' x'' todo''
+
+lookupCycle :: Ord a => [a] -> Int -> Maybe a
+lookupCycle xs i =
+  case go xs 0 M.empty of
+    Right v -> v
+    Left (i0, l) -> Just (xs !! (((i - i0) `mod` l) + i0))
+  where
+    go :: Ord a => [a] -> Int -> Map a Int -> Either (Int, Int) (Maybe a)
+    go [] _ _ = Right Nothing
+    go (y:ys) j m
+      | i == j = Right $ Just y
+      | otherwise =
+        case M.lookup y m of
+          Nothing -> go ys (j + 1) (M.insert y j m)
+          Just k -> Left (k, j - k)
+
+lookupLinear :: (Num a, Eq a) => Int -> [a] -> Int -> Maybe a
+lookupLinear len xs i =
+  let ds = zipWith subtract xs (tail xs)
+   in go xs ds i
+  where
+    go [] _ _ = Nothing
+    go (y:_) _ 0 = Just y
+    go (_:ys) [] j = go ys [] (j - 1)
+    go (y:ys) (d:ds) j
+      | all (== d) (take len ds) = Just (y + fromIntegral j * d)
+      | otherwise = go ys ds (j - 1)
