@@ -66,7 +66,6 @@ stepCart :: Map (Int, Int) Char -> State Cart ()
 stepCart m = do
   move
   p <- (,) <$> use x <*> use y
-  d <- use dir
   case M.lookup p m of
     Just '+' -> do
       dir <~ turnDir <$> use turn <*> use dir
@@ -113,11 +112,11 @@ p1 = do
   ls <- lines <$> input
   let xs =
         concatMap
-          (\(y, l) -> fmap (\(x, c) -> ((x, y), c)) (zip [0 ..] (toS l)))
+          (\(y', l) -> fmap (\(x', c) -> ((x', y'), c)) (zip [0 ..] (toS l)))
           (zip [0 ..] ls)
       m = M.fromList $ filter ((/= ' ') . snd) xs
       cs = mapMaybe mkCart xs
-      r = runExcept $ evalStateT (for_ [1 ..] $ \_ -> step m) cs
+      r = runExcept $ evalStateT (for_ [1 :: Int ..] $ \_ -> step m) cs
   print r
 
 -- findDelete :: (a -> Bool) -> [a] -> Maybe [a]
@@ -157,9 +156,9 @@ p2 = do
   ls <- lines <$> input
   let xs =
         concatMap
-          (\(y, l) -> fmap (\(x, c) -> ((x, y), c)) (zip [0 ..] (toS l)))
+          (\(y', l) -> fmap (\(x', c) -> ((x', y'), c)) (zip [0 ..] (toS l)))
           (zip [0 ..] ls)
       m = M.fromList $ filter ((/= ' ') . snd) xs
       cs = mapMaybe mkCart xs
-      r = runExcept $ evalStateT (for_ [1 ..] $ \_ -> step' m) cs
+      r = runExcept $ evalStateT (for_ [1 :: Int ..] $ \_ -> step' m) cs
   print r

@@ -34,4 +34,4 @@ input = readFile "data/input-X.txt"
 --   case xs of
 --     Right ns -> do
 --       print ns
---     Left e -> putStr (parseErrorPretty e)
+--     Left e -> putStr (errorBundlePretty e)

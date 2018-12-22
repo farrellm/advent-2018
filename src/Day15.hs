@@ -1,13 +1,10 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings, FlexibleContexts #-}
-{-# LANGUAGE TupleSections, GADTs, RecordWildCards, TemplateHaskell #-}
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE NoImplicitPrelude, OverloadedStrings#-}
+{-# LANGUAGE TupleSections, RecordWildCards, TemplateHaskell #-}
 
-module Day15 (p1, p2) where
+module Day15 (p1, p2, sp) where
 
 import AdventPrelude hiding (ap)
-import qualified Data.List as L
 import qualified Data.Map as M
-import qualified Data.Sequence as Q
 import qualified Data.Set as S
 import qualified Data.HashSet as H
 import qualified Data.Text as T
@@ -65,7 +62,7 @@ stepUnit ws moved (p, u) toMove = do
       other = moved <> toMove
       es = M.keys $ M.filter isEnemy other
       ds = allDist f 1 (M.singleton p 0) (S.singleton p)
-      ds' = M.filterWithKey (\p _ -> isNbr es p) ds
+      ds' = M.filterWithKey (\p' _ -> isNbr es p') ds
       ts = S.fromList . fmap swap $ M.toList ds'
   when (null es) $ Left (M.elems moved ++ u : M.elems toMove)
   case S.lookupMin ts of
@@ -81,6 +78,7 @@ stepUnit ws moved (p, u) toMove = do
                     (_, -1) -> 2
                     (_, 1) -> 3
                     (1, _) -> 4
+                    (_, _) -> panic "bad step"
           dist a b
             | b == p = dist b a
           dist _ _ = 4

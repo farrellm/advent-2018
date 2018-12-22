@@ -6,10 +6,6 @@ import AdventPrelude
 import qualified Data.List as L
 import qualified Data.Sequence as Q
 
-input :: IO Text
-input = readFile "data/input-14.txt"
--- input = readFile "data/test-14.txt"
-
 -- digits :: Int -> [Int]
 -- digits i = fmap (subtract (ord '0') . ord) $ show i
 
@@ -18,7 +14,6 @@ next a b = digits (a + b)
 
 step :: (Int, Int) -> State (Seq Int) ((Int, Int))
 step (i, j) = do
-  sb <- get
   a <- (`Q.index` i) <$> get
   b <- (`Q.index` j) <$> get
   modify (<> (Q.fromList $ next a b))
@@ -30,7 +25,7 @@ step (i, j) = do
 p1 :: IO ()
 p1 = do
   let go x _ = step x
-      (x, s) = runState (foldM go (0, 1) [1 .. 556061]) $ Q.fromList [3, 7]
+      s = execState (foldM go (0, 1) [1 :: Int .. 556061]) $ Q.fromList [3, 7]
   print (take 10 . drop 556061 $ toList s)
 
 step' :: (Int, Int) -> Seq Int -> [Int]
