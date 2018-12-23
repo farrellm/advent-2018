@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude, OverloadedStrings, TupleSections, GADTs #-}
 
-module Day17 (p1, printGrid) where
+module Day17 (p1) where
 
 import AdventPrelude
 import qualified Data.Map as M
@@ -29,19 +29,6 @@ data Cell = Clay | Stable | Flow
   deriving (Show, Eq)
 
 type Grid = Map (Int, Int) Cell
-
-printGrid :: Grid -> IO ()
-printGrid g = do
-  let ys = fmap fst $ M.keys g
-      xs = fmap snd $ M.keys g
-  for_ [minimum ys .. maximum ys] $ \y ->
-    putStrLn $
-    flip fmap [minimum xs .. maximum xs] $ \x ->
-      case M.lookup (y, x) g of
-        Nothing -> '.' :: Char
-        Just Clay -> '#'
-        Just Stable -> '~'
-        Just Flow -> '|'
 
 barrierGrid :: Barrier -> Grid
 barrierGrid (Wall x y1 y2) =

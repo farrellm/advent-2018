@@ -37,6 +37,8 @@ module AdventPrelude
   , nbr8
   , mv4
   , mv8
+  , charMap
+  , printGrid
   , dist1
   , bounds
   , words
@@ -188,36 +190,36 @@ data Dir4 = L | R | U | D
 data Dir8 = LL | LU | LD | RR | RU | RD | UU | DD
   deriving (Show, Eq, Ord, Enum, Bounded)
 
-nbr4 :: (Num a) => (a, a) -> [(a, a)]
-nbr4 (x, y) = [(x + 1, y), (x, y + 1), (x - 1, y), (x, y - 1)]
+nbr4 :: (Enum a) => (a, a) -> [(a, a)]
+nbr4 (x, y) = [(succ x, y), (x, succ y), (pred x, y), (x, pred y)]
 
-nbr8 :: (Num a) => (a, a) -> [(a, a)]
+nbr8 :: (Enum a) => (a, a) -> [(a, a)]
 nbr8 (x, y) =
-  [ (x + 1, y)
-  , (x + 1, y + 1)
-  , (x, y + 1)
-  , (x - 1, y + 1)
-  , (x - 1, y)
-  , (x - 1, y - 1)
-  , (x, y - 1)
-  , (x + 1, y - 1)
+  [ (succ x, y)
+  , (succ x, succ y)
+  , (x, succ y)
+  , (pred x, succ y)
+  , (pred x, y)
+  , (pred x, pred y)
+  , (x, pred y)
+  , (succ x, pred y)
   ]
 
 mv4 :: (Enum a, Enum b) => (a, b) -> Dir4 -> (a, b)
-mv4 (x, y) L = (pred x, y)
-mv4 (x, y) R = (succ x, y)
-mv4 (x, y) U = (x, succ y)
-mv4 (x, y) D = (x, pred y)
+mv4 (x, y) U = (pred x, y)
+mv4 (x, y) D = (succ x, y)
+mv4 (x, y) L = (x, pred y)
+mv4 (x, y) R = (x, succ y)
 
 mv8 :: (Enum a, Enum b) => (a, b) -> Dir8 -> (a, b)
-mv8 (x, y) LL = (pred x, y)
-mv8 (x, y) LU = (pred x, succ y)
-mv8 (x, y) LD = (pred x, pred y)
-mv8 (x, y) RR = (succ x, y)
-mv8 (x, y) RU = (succ x, succ y)
-mv8 (x, y) RD = (succ x, pred y)
-mv8 (x, y) UU = (x, succ y)
-mv8 (x, y) DD = (x, pred y)
+mv8 (x, y) UU = (pred x, y)
+mv8 (x, y) DD = (succ x, y)
+mv8 (x, y) LL = (x, pred y)
+mv8 (x, y) RR = (x, succ y)
+mv8 (x, y) LU = (pred x, pred y)
+mv8 (x, y) RU = (pred x, succ y)
+mv8 (x, y) RD = (succ x, succ y)
+mv8 (x, y) LD = (succ x, pred y)
 
 dist1 :: Num n => (n, n) -> (n, n) -> n
 dist1 (a, b) (c, d) = abs (a - c) + abs (b - d)
@@ -229,6 +231,19 @@ bounds cs =
       y1 = minimum $ fmap snd cs
       y2 = maximum $ fmap snd cs
    in ((x1, x2), (y1, y2))
+
+printGrid :: Map (Int, Int) Char -> IO ()
+printGrid g =
+  let ((r1, r2), (c1, c2)) = bounds $ M.keys g
+   in for_ [r1 .. r2] $ \r ->
+        putStrLn $ fmap (\c -> M.findWithDefault '.' (r, c) g) [c1 .. c2]
+
+charMap :: [[Char]] -> Map (Int, Int) Char
+charMap cs =
+  M.fromList $ do
+    (r, xs) <- zip [0 ..] cs
+    (c, x) <- zip [0 ..] xs
+    pure ((r, c), x)
 
 type Parser = Mp.Parsec Void Text
 
